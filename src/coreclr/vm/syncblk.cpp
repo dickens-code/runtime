@@ -483,7 +483,9 @@ SyncBlockCache::SyncBlockCache()
       m_SyncTableSize(SYNC_TABLE_INITIAL_SIZE),
       m_OldSyncTables(0),
       m_bSyncBlockCleanupInProgress(FALSE),
-      m_EphemeralBitmap(0)
+      m_EphemeralBitmap(0),
+      m_CardSetBitEphemeral(0),
+      m_CardSetBitNotEphemeral(0)
 {
     CONTRACTL
     {
@@ -924,7 +926,16 @@ DWORD SyncBlockCache::NewSyncBlockSlot(Object *obj)
     {
         // This is kept out of line to keep stuff like the C++ EH prolog (needed for holders) off
         // of the common path.
+        DWORD oldSyncTableSize = m_SyncTableSize;
         Grow();
+        SYSTEMTIME st;
+        GetSystemTime(&st);
+        FILE * pFile = fopen ("NewSyncBlockSlot.log", "a");
+        if (pFile != NULL)
+        {
+          fprintf (pFile, "[%lu]%02lu:%02lu:%02lu m_SyncTableSize:%d->%d m_FreeSyncTableIndex:%d m_CardSetBitEphemeral:%d m_CardSetBitNotEphemeral:%d\n", (ULONG)st.wDay, (ULONG)st.wHour, (ULONG)st.wMinute, (ULONG)st.wSecond, oldSyncTableSize, m_SyncTableSize, m_FreeSyncTableIndex, m_CardSetBitEphemeral, m_CardSetBitNotEphemeral);
+          fclose (pFile);
+        }
     }
     else
     {
@@ -945,7 +956,12 @@ DWORD SyncBlockCache::NewSyncBlockSlot(Object *obj)
 
     if (GCHeapUtilities::GetGCHeap()->IsEphemeral (obj))
     {
+        m_CardSetBitEphemeral++;
         CardTableSetBit (indexNewEntry);
+    }
+    else
+    {
+        m_CardSetBitNotEphemeral++;
     }
 
     // In debug builds the m_SyncBlock at indexNewEntry should already be null, since we should

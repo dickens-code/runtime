@@ -1310,6 +1310,8 @@ class SyncBlockCache
 
     BOOL        m_bSyncBlockCleanupInProgress;  // A flag indicating if sync block cleanup is in progress.
     DWORD*      m_EphemeralBitmap;      // card table for ephemeral scanning
+    DWORD m_CardSetBitEphemeral;
+    DWORD m_CardSetBitNotEphemeral;
 
     BOOL        GCWeakPtrScanElement(int elindex, HANDLESCANPROC scanProc, LPARAM lp1, LPARAM lp2, BOOL& cleanup);
 
